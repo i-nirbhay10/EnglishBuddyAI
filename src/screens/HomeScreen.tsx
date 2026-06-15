@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../theme/theme';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
+import { QuestCard } from '../components/QuestCard';
 
-export const HomeScreen = () => {
+export const HomeScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -55,122 +56,39 @@ export const HomeScreen = () => {
       {/* Daily Quests */}
       <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: spacing.md }]}>Daily Quests</Text>
       
-      <TouchableOpacity 
-        style={[styles.questCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.md, marginBottom: spacing.md, padding: spacing.md }]} 
-        activeOpacity={0.8}
-      >
-        <View style={[styles.questIconContainer, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.md, marginRight: spacing.md }]}>
-          <Icon name="bullseye" family="FontAwesome5" size={24} color={colors.error} />
-        </View>
-        <View style={styles.questInfo}>
-          <Text style={[styles.questName, { color: colors.text }]}>Sentence Completer</Text>
-          <Text style={[styles.questDesc, { color: colors.textMuted }]}>Complete 10 sentences</Text>
-        </View>
-        <Text style={[styles.rewardText, { color: colors.warning }]}>+50 XP</Text>
-      </TouchableOpacity>
+      <QuestCard 
+        name="Sentence Completer"
+        description="Complete 10 sentences"
+        xpReward={50}
+        iconName="bullseye"
+        iconColor={colors.error}
+        onPress={() => navigation.navigate('GameScreen')}
+      />
 
-      <TouchableOpacity 
-        style={[styles.questCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.md, marginBottom: spacing.md, padding: spacing.md }]} 
-        activeOpacity={0.8}
-      >
-        <View style={[styles.questIconContainer, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.md, marginRight: spacing.md }]}>
-          <Icon name="robot" family="FontAwesome5" size={24} color={colors.primary} />
-        </View>
-        <View style={styles.questInfo}>
-          <Text style={[styles.questName, { color: colors.text }]}>AI Conversation</Text>
-          <Text style={[styles.questDesc, { color: colors.textMuted }]}>Chat for 5 minutes</Text>
-        </View>
-        <Text style={[styles.rewardText, { color: colors.warning }]}>+100 XP</Text>
-      </TouchableOpacity>
+      <QuestCard 
+        name="AI Conversation"
+        description="Chat for 5 minutes"
+        xpReward={100}
+        iconName="robot"
+        iconColor={colors.primary}
+        onPress={() => navigation.navigate('AI Chat')}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    // Dynamic paddings applied inline
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greeting: {
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-  },
-  statBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-  },
-  statIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  statText: {
-    fontWeight: 'bold',
-  },
-  progressCard: {
-    borderWidth: 1,
-  },
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  progressBarBg: {
-    height: 12,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  questCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  questIconContainer: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  questIcon: {
-    fontSize: 24,
-  },
-  questInfo: {
-    flex: 1,
-  },
-  questName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  questDesc: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  rewardText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  container: { flex: 1 },
+  content: {},
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  greeting: { fontSize: 14, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  username: { fontSize: 24, fontWeight: 'bold', marginTop: 4 },
+  statsContainer: { flexDirection: 'row' },
+  statBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
+  statText: { fontWeight: 'bold' },
+  progressCard: { borderWidth: 1 },
+  progressTitle: { fontSize: 16, fontWeight: '600' },
+  progressBarBg: { height: 12, overflow: 'hidden' },
+  progressBarFill: { height: '100%' },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold' },
 });

@@ -12,7 +12,7 @@ const regions = [
   { id: 5, name: 'Writing Castle', levels: 5, unlocked: false, currentLevel: 0 },
 ];
 
-export const MapScreen = () => {
+export const MapScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -83,6 +83,11 @@ export const MapScreen = () => {
                             ]}
                             disabled={isLocked}
                             activeOpacity={0.7}
+                            onPress={() => {
+                              if (isCurrent || isCompleted) {
+                                navigation.navigate('GameScreen');
+                              }
+                            }}
                           >
                             <Icon name={iconName} family="FontAwesome5" size={12} color={iconColor} />
                           </TouchableOpacity>

@@ -10,6 +10,8 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { MapScreen } from '../screens/MapScreen';
+import { AIChatScreen } from '../screens/AIChatScreen';
+import { GameScreen } from '../screens/GameScreen';
 import { View, Text } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -70,7 +72,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="AI Chat" component={() => <PlaceholderScreen name="AI Simulator" />} />
+      <Tab.Screen name="AI Chat" component={AIChatScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -99,6 +101,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="GameScreen" component={GameScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
