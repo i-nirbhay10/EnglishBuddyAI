@@ -8,6 +8,8 @@ import { useTheme } from '../theme/theme';
 import { SplashScreen } from '../screens/SplashScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
+import { MapScreen } from '../screens/MapScreen';
 import { View, Text } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -67,9 +69,9 @@ const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Map" component={() => <PlaceholderScreen name="World Map" />} />
+      <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="AI Chat" component={() => <PlaceholderScreen name="AI Simulator" />} />
-      <Tab.Screen name="Profile" component={() => <PlaceholderScreen name="Profile" />} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
