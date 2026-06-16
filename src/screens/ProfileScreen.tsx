@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   settingsButton: {
@@ -112,17 +112,17 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatarGradient: {
-    width: 90,
-    height: 90,
+    width: 80,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
   levelBadge: {
     position: 'absolute',
-    bottom: -4,
-    right: -4,
-    width: 32,
-    height: 32,
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
   levelText: {
     color: '#FFF',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12,
   },
   username: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   titleText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,

@@ -1,97 +1,75 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# EnglishBuddyAI 🤖🌍
 
-# Getting Started
+EnglishBuddyAI is a gamified, interactive English learning companion built with React Native and powered by Google's Gemini AI. It helps users master English through dynamic challenges, boss battles, and a conversational AI tutor.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🌟 Key Features
 
-## Step 1: Start Metro
+- **Gamified Progression Map**: Navigate through regions like "Beginner Kingdom" and "Grammar Forest", unlocking new nodes and earning XP as you go. Progress is securely saved on your device using `AsyncStorage`.
+- **AI-Powered Grammar Challenges**: Play fill-in-the-blank style games where questions are dynamically generated on-the-fly by the Gemini AI based on your current level.
+- **Smart Feedback**: The AI doesn't just tell you if you're right or wrong—it provides a concise, tailored explanation for *why* an answer is correct or incorrect.
+- **Conversational AI Companion**: Practice your speaking and typing skills by chatting with an AI English Tutor designed to correct grammar and provide conversational practice.
+- **Modern UI**: A premium, responsive design featuring bottom-tab navigation, floating cards, subtle animations via `react-native-reanimated`, and fluid gradients.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 🛠 Tech Stack
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Framework**: React Native (Bare Workflow)
+- **Language**: TypeScript
+- **Navigation**: React Navigation (Native Stack & Bottom Tabs)
+- **AI Integration**: Google Gemini API (`gemini-flash-latest`)
+- **Animations**: React Native Reanimated
+- **Storage**: `@react-native-async-storage/async-storage`
+- **Environment**: `react-native-dotenv`
 
-```sh
-# Using npm
-npm start
+## 🚀 Getting Started
 
-# OR using Yarn
-yarn start
+### Prerequisites
+Make sure you have your React Native development environment set up for Android and/or iOS.
+
+### 1. Clone & Install
+```bash
+# Install dependencies
+npm install
 ```
 
-## Step 2: Build and run your app
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory of the project and add your Gemini API key:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+*(Note: You can get a free API key from [Google AI Studio](https://aistudio.google.com/)).*
 
-### Android
+### 3. Run the App
 
-```sh
-# Using npm
+Start the Metro bundler:
+```bash
+# It is recommended to clear the cache if you just added the .env file
+npm start -- --reset-cache
+```
+
+Run on your preferred platform:
+```bash
+# Android
 npm run android
 
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+# iOS
+cd ios && pod install && cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## 📂 Project Structure
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+- `/src/components` - Reusable UI elements (Icons, Progress Bars, Stat Cards)
+- `/src/screens` - Main app screens (Home, Map, Game, AI Chat, Profile, Onboarding)
+- `/src/navigation` - Tab and Stack navigators routing logic
+- `/src/services` - API logic (`aiService.ts`) and local persistence (`storageService.ts`)
+- `/src/theme` - Centralized color palettes, spacing, and typography
 
-## Step 3: Modify your app
+## 🎮 How to Play
+1. **Start the Adventure**: Go through the onboarding and open the World Map.
+2. **Play a Node**: Tap the glowing blue node on the map to start an AI-generated grammar quiz.
+3. **Earn XP**: Answer correctly to gain XP. Read the explanations to improve your skills.
+4. **Level Up**: Earn enough XP and watch your global level increase on the Home and Profile screens!
 
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+*Built with ❤️ using React Native & Gemini AI.*

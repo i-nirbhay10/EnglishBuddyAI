@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator, ScrollView } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming } from 'react-native-reanimated';
@@ -77,9 +77,6 @@ export const GameScreen = ({ navigation }: any) => {
         withSpring(1.1),
         withSpring(1)
       );
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 1500);
     } else {
       setIsCorrect(false);
       setLives(prev => prev - 1);
@@ -93,25 +90,48 @@ export const GameScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       if (lives <= 0 && !isCorrect) {
         // Game over state
-        navigation.goBack();
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          navigation.navigate('MainTabs');
+        }
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
         setIsCorrect(null);
       }
     } else {
-      navigation.goBack();
+      if (lives > 0 || isCorrect) {
+        // Finished all questions successfully
+        try {
+          const { completeNode } = await import('../services/storageService');
+          await completeNode();
+        } catch (e) {
+          console.error("Failed to save progress", e);
+        }
+      }
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('MainTabs');
+      }
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={[styles.header, { padding: spacing.md }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+        <TouchableOpacity onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('MainTabs');
+          }
+        }} style={{ padding: 8 }}>
           <Icon name="times" family="FontAwesome5" size={24} color={colors.textMuted} />
         </TouchableOpacity>
         
@@ -125,7 +145,11 @@ export const GameScreen = ({ navigation }: any) => {
         </View>
       </View>
 
-      <View style={[styles.content, { padding: spacing.lg }]}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={[styles.content, { padding: spacing.lg }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.prompt, { color: colors.textMuted }]}>Fill in the blank</Text>
         
         <Animated.View style={[styles.sentenceContainer, animatedStyle, { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 5, borderRadius: borderRadius.xl }]}>
@@ -166,20 +190,60 @@ export const GameScreen = ({ navigation }: any) => {
             />
           ))}
         </View>
-      </View>
+      </ScrollView>
 
-      {isCorrect === false && (
-        <Animated.View style={[styles.feedbackContainer, { backgroundColor: colors.error + '10', borderTopColor: colors.error + '30', padding: spacing.xl, borderTopWidth: 1 }]}>
+      {isCorrect !== null && (
+        <Animated.View style={[
+          styles.feedbackContainer, 
+          { 
+            backgroundColor: isCorrect ? (colors.success + '10') : (colors.error + '10'), 
+            borderTopColor: isCorrect ? (colors.success + '30') : (colors.error + '30'), 
+            padding: spacing.xl, 
+            borderTopWidth: 1 
+          }
+        ]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-            <Icon name="times-circle" family="FontAwesome5" size={24} color={colors.error} />
-            <Text style={[styles.feedbackTitle, { color: colors.error, marginLeft: 8 }]}>Incorrect</Text>
+            <Icon 
+              name={isCorrect ? "check-circle" : "times-circle"} 
+              family="FontAwesome5" 
+              size={24} 
+              color={isCorrect ? colors.success : colors.error} 
+            />
+            <Text style={[styles.feedbackTitle, { color: isCorrect ? colors.success : colors.error, marginLeft: 8 }]}>
+              {isCorrect ? "Excellent!" : "Incorrect"}
+            </Text>
           </View>
-          <Text style={[styles.feedbackText, { color: colors.text, marginBottom: spacing.lg }]}>The correct answer is <Text style={{fontWeight: 'bold', color: colors.success}}>{question.correctAnswer}</Text></Text>
+          
+          {!isCorrect && (
+            <Text style={[styles.feedbackText, { color: colors.text, marginBottom: spacing.md }]}>
+              The correct answer is <Text style={{fontWeight: 'bold', color: colors.success}}>{question.correctAnswer}</Text>
+            </Text>
+          )}
+
+          {question.explanation && (
+            <Text style={[styles.explanationText, { color: colors.textMuted, marginBottom: spacing.lg, lineHeight: 22 }]}>
+              {question.explanation}
+            </Text>
+          )}
+
           <TouchableOpacity 
-            style={[styles.continueButton, { backgroundColor: colors.error, borderRadius: borderRadius.round, shadowColor: colors.error, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }]}
+            style={[
+              styles.continueButton, 
+              { 
+                backgroundColor: isCorrect ? colors.success : colors.error, 
+                borderRadius: borderRadius.round, 
+                shadowColor: isCorrect ? colors.success : colors.error, 
+                shadowOffset: { width: 0, height: 4 }, 
+                shadowOpacity: 0.3, 
+                shadowRadius: 8, 
+                elevation: 4 
+              }
+            ]}
             onPress={handleNextQuestion}
           >
-            <Text style={styles.continueButtonText}>{lives <= 0 ? "Game Over" : "Got it"}</Text>
+            <Text style={styles.continueButtonText}>
+              {lives <= 0 && !isCorrect ? "Game Over" : "Continue"}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -247,23 +311,24 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centerAll: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { fontSize: 16, fontWeight: '500' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
-  progressWrapper: { flex: 1, marginHorizontal: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
+  progressWrapper: { flex: 1, marginHorizontal: 16 },
   livesContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
-  livesText: { fontWeight: 'bold', fontSize: 18, marginLeft: 6 },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 20 },
-  prompt: { fontSize: 14, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20 },
-  sentenceContainer: { width: '100%', padding: 32, marginBottom: 40, minHeight: 180, justifyContent: 'center', alignItems: 'center' },
-  sentenceText: { fontSize: 24, fontWeight: '600', textAlign: 'center', lineHeight: 36 },
-  blankSpan: { fontWeight: '700', borderBottomWidth: 3, paddingBottom: 2 },
+  livesText: { fontWeight: 'bold', fontSize: 16, marginLeft: 6 },
+  content: { flexGrow: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 16, paddingHorizontal: 16, paddingBottom: 40 },
+  prompt: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 16 },
+  sentenceContainer: { width: '100%', padding: 20, marginBottom: 24, minHeight: 120, justifyContent: 'center', alignItems: 'center' },
+  sentenceText: { fontSize: 20, fontWeight: '600', textAlign: 'center', lineHeight: 28 },
+  blankSpan: { fontWeight: '700', borderBottomWidth: 2, paddingBottom: 1 },
   optionsContainer: { width: '100%' },
-  optionButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingRight: 20, borderWidth: 2 },
-  letterCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  letterText: { fontSize: 14, fontWeight: 'bold' },
-  optionText: { fontSize: 18, fontWeight: '600' },
-  feedbackContainer: { width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  feedbackTitle: { fontSize: 22, fontWeight: '800' },
-  feedbackText: { fontSize: 16, lineHeight: 24 },
-  continueButton: { padding: 18, alignItems: 'center', justifyContent: 'center' },
-  continueButtonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold', letterSpacing: 0.5 },
+  optionButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, paddingRight: 16, borderWidth: 1.5 },
+  letterCircle: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  letterText: { fontSize: 12, fontWeight: 'bold' },
+  optionText: { fontSize: 16, fontWeight: '600' },
+  feedbackContainer: { width: '100%', borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  feedbackTitle: { fontSize: 20, fontWeight: '800' },
+  feedbackText: { fontSize: 15, lineHeight: 22 },
+  explanationText: { fontSize: 14, fontStyle: 'italic' },
+  continueButton: { padding: 14, alignItems: 'center', justifyContent: 'center' },
+  continueButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
 });

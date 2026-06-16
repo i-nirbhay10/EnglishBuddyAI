@@ -1,23 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const regions = [
-  { id: 1, name: 'Beginner Kingdom', levels: 5, unlocked: true, currentLevel: 3 },
-  { id: 2, name: 'Grammar Forest', levels: 6, unlocked: false, currentLevel: 0 },
-  { id: 3, name: 'Vocabulary Valley', levels: 4, unlocked: false, currentLevel: 0 },
-  { id: 4, name: 'Speaking Arena', levels: 3, unlocked: false, currentLevel: 0 },
-  { id: 5, name: 'Writing Castle', levels: 5, unlocked: false, currentLevel: 0 },
+import { useFocusEffect } from '@react-navigation/native';
+import { getProgress } from '../services/storageService';
+
+const baseRegions = [
+  { id: 1, name: 'Beginner Kingdom', levels: 5 },
+  { id: 2, name: 'Grammar Forest', levels: 6 },
+  { id: 3, name: 'Vocabulary Valley', levels: 4 },
+  { id: 4, name: 'Speaking Arena', levels: 3 },
+  { id: 5, name: 'Writing Castle', levels: 5 },
 ];
 
 export const MapScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const [completedNodes, setCompletedNodes] = useState(0);
+  const [xp, setXp] = useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadProgress = async () => {
+        const progress = await getProgress();
+        setCompletedNodes(progress.completedNodes);
+        setXp(progress.xp);
+      };
+      loadProgress();
+    }, [])
+  );
+
+  let nodesPassed = 0;
+  const regions = baseRegions.map((r) => {
+    const regionStartNode = nodesPassed;
+    const regionEndNode = nodesPassed + r.levels - 1;
+
+    const unlocked = completedNodes >= regionStartNode;
+
+    let currentLevel = 0;
+    if (completedNodes > regionEndNode) {
+      currentLevel = r.levels;
+    } else if (completedNodes >= regionStartNode) {
+      currentLevel = completedNodes - regionStartNode;
+    }
+
+    nodesPassed += r.levels;
+    return { ...r, unlocked, currentLevel };
+  });
+
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[
         styles.content,
@@ -30,8 +65,8 @@ export const MapScreen = ({ navigation }: any) => {
       <View style={[styles.header, { paddingHorizontal: spacing.lg, marginBottom: spacing.xl }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>World Map</Text>
         <View style={[styles.energyBadge, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}>
-          <Icon name="bolt" family="FontAwesome5" size={16} color={colors.warning} />
-          <Text style={[styles.energyText, { color: colors.text }]}>5/5</Text>
+          <Icon name="star" family="FontAwesome5" size={16} color={colors.warning} />
+          <Text style={[styles.energyText, { color: colors.text }]}>{xp} XP</Text>
         </View>
       </View>
 
@@ -47,7 +82,7 @@ export const MapScreen = ({ navigation }: any) => {
                   </Text>
                   {!region.unlocked && <Icon name="lock" family="FontAwesome5" size={16} color={colors.textMuted} />}
                 </View>
-                
+
                 {region.unlocked && (
                   <View style={styles.levelsContainer}>
                     {Array.from({ length: region.levels }).map((_, levelIdx) => {
@@ -71,10 +106,10 @@ export const MapScreen = ({ navigation }: any) => {
 
                       return (
                         <React.Fragment key={`level-${levelIdx}`}>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={[
-                              styles.levelNode, 
-                              { 
+                              styles.levelNode,
+                              {
                                 backgroundColor: nodeColor,
                                 borderColor: isCurrent ? colors.text : 'transparent',
                                 borderWidth: isCurrent ? 2 : 0,
@@ -91,7 +126,7 @@ export const MapScreen = ({ navigation }: any) => {
                           >
                             <Icon name={iconName} family="FontAwesome5" size={12} color={iconColor} />
                           </TouchableOpacity>
-                          
+
                           {levelIdx < region.levels - 1 && (
                             <View style={[styles.pathLine, { backgroundColor: isCompleted ? colors.success : colors.surfaceHighlight }]} />
                           )}
@@ -101,12 +136,12 @@ export const MapScreen = ({ navigation }: any) => {
                   </View>
                 )}
               </View>
-              
+
               {/* Connector between regions */}
               {index < regions.length - 1 && (
                 <View style={[
-                  styles.regionConnector, 
-                  { 
+                  styles.regionConnector,
+                  {
                     backgroundColor: regions[index + 1].unlocked ? colors.success : colors.surfaceHighlight,
                     alignSelf: isReversed ? 'flex-start' : 'flex-end',
                     marginLeft: isReversed ? spacing.xxl : 0,
@@ -133,14 +168,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   energyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   energyText: {
     fontWeight: 'bold',
@@ -178,9 +213,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   levelNode: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },

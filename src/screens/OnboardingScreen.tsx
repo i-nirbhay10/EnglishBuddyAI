@@ -29,7 +29,7 @@ export const OnboardingScreen = ({ navigation }: any) => {
           colors={[colors.primary, colors.secondary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.button, { paddingVertical: spacing.lg }]}
+          style={[styles.button, { paddingVertical: spacing.md }]}
         >
           <Text style={styles.buttonText}>Start Adventure</Text>
         </LinearGradient>
@@ -52,14 +52,14 @@ const styles = StyleSheet.create({
     fontSize: 100,
   },
   title: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   description: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 24,
   },
   buttonContainer: {
     overflow: 'hidden',
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
