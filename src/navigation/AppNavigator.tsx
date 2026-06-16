@@ -78,6 +78,8 @@ const MainTabs = () => {
   );
 };
 
+import { SettingsScreen } from '../screens/SettingsScreen';
+
 export const AppNavigator = () => {
   const { colors, isDark } = useTheme();
 
@@ -102,6 +104,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="GameScreen" component={GameScreen} />
+        <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

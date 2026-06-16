@@ -5,17 +5,32 @@ import { Icon } from '../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getChatResponse } from '../services/aiService';
 import { ChatMessage, Message } from '../components/ChatMessage';
+import { getChatHistory, saveChatHistory } from '../services/storageService';
 
 export const AIChatScreen = () => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: "Hello there! I'm your EnglishBuddy. How can I help you practice today?", isUser: false },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    const loadHistory = async () => {
+      const history = await getChatHistory();
+      if (history && history.length > 0) {
+        setMessages(history);
+      } else {
+        setMessages([
+          { id: '1', text: "Hello there! I'm your EnglishBuddy. How can I help you practice today?", isUser: false },
+        ]);
+      }
+      setIsLoadingHistory(false);
+    };
+    loadHistory();
+  }, []);
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -26,17 +41,39 @@ export const AIChatScreen = () => {
       isUser: true,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage];
+      saveChatHistory(newMessages);
+      return newMessages;
+    });
     setInputText('');
     setIsTyping(true);
+    
+    await sendMessageToAI(userMessage.text, messages);
+  };
 
+  const startRoleplay = async (scenario: string) => {
+    const prompt = `Let's do a roleplay scenario: ${scenario}. You start the conversation.`;
+    const userMessage: Message = { id: Date.now().toString(), text: prompt, isUser: true };
+    
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage];
+      saveChatHistory(newMessages);
+      return newMessages;
+    });
+    setIsTyping(true);
+    
+    await sendMessageToAI(prompt, messages);
+  };
+
+  const sendMessageToAI = async (text: string, currentMessages: Message[]) => {
     try {
-      const historyForAi = messages.map(m => ({
+      const historyForAi = currentMessages.map(m => ({
         role: m.isUser ? 'user' : 'model',
         text: m.text
       }));
 
-      const { response, correction } = await getChatResponse(userMessage.text, historyForAi);
+      const { response, correction } = await getChatResponse(text, historyForAi);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -45,13 +82,27 @@ export const AIChatScreen = () => {
         correction,
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, botMessage];
+        saveChatHistory(newMessages);
+        return newMessages;
+      });
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, { id: Date.now().toString(), text: "I'm sorry, I'm having trouble connecting to my brain right now.", isUser: false }]);
+      setMessages(prev => {
+        const newMessages = [...prev, { id: Date.now().toString(), text: "I'm sorry, I'm having trouble connecting to my brain right now.", isUser: false }];
+        saveChatHistory(newMessages);
+        return newMessages;
+      });
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleClearChat = async () => {
+    const defaultMsg = [{ id: '1', text: "Hello there! I'm your EnglishBuddy. How can I help you practice today?", isUser: false }];
+    setMessages(defaultMsg);
+    await saveChatHistory(defaultMsg);
   };
 
   return (
@@ -64,8 +115,11 @@ export const AIChatScreen = () => {
           <Icon name="robot" family="FontAwesome5" size={24} color={colors.primaryNeon} />
           <Text style={[styles.headerTitle, { color: colors.text, marginLeft: spacing.sm }]}>AI Conversation</Text>
         </View>
-        <TouchableOpacity style={[styles.headerButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}>
-          <Icon name="ellipsis-v" family="FontAwesome5" size={16} color={colors.text} />
+        <TouchableOpacity 
+          style={[styles.headerButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}
+          onPress={handleClearChat}
+        >
+          <Icon name="trash" family="FontAwesome5" size={16} color={colors.error} />
         </TouchableOpacity>
       </View>
 
@@ -75,9 +129,38 @@ export const AIChatScreen = () => {
         contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xxl }}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
-        {messages.map((msg) => (
-          <ChatMessage key={msg.id} msg={msg} />
-        ))}
+        {isLoadingHistory ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color={colors.primaryNeon} />
+          </View>
+        ) : (
+          <>
+            {messages.map((msg) => (
+              <ChatMessage key={msg.id} msg={msg} />
+            ))}
+            
+            {messages.length === 1 && (
+              <View style={{ marginTop: spacing.xl }}>
+                <Text style={{ color: colors.textMuted, fontSize: 13, textTransform: 'uppercase', fontWeight: 'bold', marginBottom: spacing.md, letterSpacing: 1 }}>Or try a Roleplay Scenario:</Text>
+                
+                <TouchableOpacity onPress={() => startRoleplay("I am at a coffee shop ordering a drink and a pastry")} style={[styles.scenarioBtn, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                  <Icon name="coffee" family="FontAwesome5" size={16} color={colors.primary} />
+                  <Text style={[styles.scenarioText, { color: colors.text }]}>Coffee Shop Order</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity onPress={() => startRoleplay("I am at a job interview for a software developer position")} style={[styles.scenarioBtn, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                  <Icon name="briefcase" family="FontAwesome5" size={16} color={colors.accent} />
+                  <Text style={[styles.scenarioText, { color: colors.text }]}>Job Interview</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity onPress={() => startRoleplay("I am checking into a hotel but they can't find my reservation")} style={[styles.scenarioBtn, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                  <Icon name="hotel" family="FontAwesome5" size={16} color={colors.warning} />
+                  <Text style={[styles.scenarioText, { color: colors.text }]}>Hotel Check-in Problem</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        )}
         {isTyping && (
           <View style={styles.typingIndicator}>
             <ActivityIndicator size="small" color={colors.primaryNeon} />
@@ -167,6 +250,19 @@ const styles = StyleSheet.create({
   typingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 16,
+    alignSelf: 'flex-start',
   },
+  scenarioBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  scenarioText: {
+    marginLeft: 12,
+    fontWeight: '600',
+    fontSize: 15,
+  }
 });

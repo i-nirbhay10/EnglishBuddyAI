@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
@@ -6,11 +6,31 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { SkillBar } from '../components/SkillBar';
 import { StatItem, Divider } from '../components/StatItem';
-import { PreferenceItem } from '../components/PreferenceItem';
+import { useFocusEffect } from '@react-navigation/native';
+import { getProgress } from '../services/storageService';
+import { calculateLevel, getLevelTitle } from '../utils/levelUtils';
 
-export const ProfileScreen = () => {
+export const ProfileScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius, isDark, toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
+  
+  const [xp, setXp] = useState(0);
+  const [completedNodes, setCompletedNodes] = useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadProgress = async () => {
+        const progress = await getProgress();
+        setXp(progress?.xp || 0);
+        setCompletedNodes(progress?.completedNodes || 0);
+      };
+      loadProgress();
+    }, [])
+  );
+
+  const safeXp = xp || 0;
+  const safeNodes = completedNodes || 0;
+  const currentLevel = calculateLevel(safeXp);
 
   return (
     <ScrollView 
@@ -18,7 +38,7 @@ export const ProfileScreen = () => {
       contentContainerStyle={[
         styles.content,
         {
-          padding: spacing.lg,
+          padding: spacing.md,
           paddingTop: Math.max(insets.top, spacing.xl),
           paddingBottom: insets.bottom + spacing.xl
         }
@@ -26,7 +46,10 @@ export const ProfileScreen = () => {
     >
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
-        <TouchableOpacity style={[styles.settingsButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}>
+        <TouchableOpacity 
+          style={[styles.settingsButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}
+          onPress={() => navigation.navigate('SettingsScreen')}
+        >
           <Icon name="settings-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
@@ -40,48 +63,38 @@ export const ProfileScreen = () => {
             <Icon name="user-astronaut" family="FontAwesome5" size={40} color="#FFF" />
           </LinearGradient>
           <View style={[styles.levelBadge, { backgroundColor: colors.accent, borderColor: colors.surface, borderRadius: borderRadius.round }]}>
-            <Text style={styles.levelText}>5</Text>
+            <Text style={styles.levelText}>{currentLevel}</Text>
           </View>
         </View>
         
         <Text style={[styles.username, { color: colors.text, marginTop: spacing.md }]}>Explorer_99</Text>
-        <Text style={[styles.titleText, { color: colors.primaryNeon, marginBottom: spacing.lg }]}>Advanced Scholar</Text>
+        <Text style={[styles.titleText, { color: colors.primaryNeon, marginBottom: spacing.lg }]}>{getLevelTitle(currentLevel)}</Text>
         
         <View style={styles.statsRow}>
-          <StatItem value="12" label="Day Streak" />
+          <StatItem value={safeNodes.toString()} label="Missions" />
           <Divider />
-          <StatItem value="4,500" label="Total XP" />
+          <StatItem value={safeXp.toLocaleString()} label="Total XP" />
           <Divider />
-          <StatItem value="Gold" label="League" color={colors.warning} />
+          <StatItem value="Bronze" label="League" color={colors.warning} />
         </View>
       </View>
 
       <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: spacing.md }]}>Skill Mastery</Text>
       
-      <View style={[styles.skillsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl }]}>
-        <SkillBar title="Vocabulary" percentage={75} color={colors.primary} />
-        <SkillBar title="Grammar" percentage={60} color={colors.secondary} />
-        <SkillBar title="Speaking" percentage={45} color={colors.accent} />
-        <SkillBar title="Listening" percentage={80} color={colors.success} />
-      </View>
-
-      <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: spacing.md }]}>Preferences</Text>
-      
-      <View style={[styles.preferencesCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg, padding: spacing.md }]}>
-        <PreferenceItem 
-          iconName="moon" 
-          label="Dark Mode" 
-          value={isDark} 
-          onValueChange={toggleTheme} 
-        />
-        <View style={[styles.horizontalDivider, { backgroundColor: colors.cardBorder, marginVertical: spacing.sm }]} />
-        <PreferenceItem 
-          iconName="volume-high" 
-          label="Sound Effects" 
-          value={true} 
-          onValueChange={() => {}} 
-        />
-      </View>
+      {safeXp === 0 ? (
+        <View style={[styles.emptyStateCard, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.lg, padding: spacing.xl, marginBottom: spacing.xl, alignItems: 'center' }]}>
+          <Icon name="chart-bar" family="FontAwesome5" size={40} color={colors.textMuted} />
+          <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold', marginTop: spacing.md, textAlign: 'center' }}>No Skill Data Yet</Text>
+          <Text style={{ color: colors.textMuted, textAlign: 'center', marginTop: 4 }}>Complete your first mission to unlock your skill mastery breakdown.</Text>
+        </View>
+      ) : (
+        <View style={[styles.skillsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl }]}>
+          <SkillBar title="Vocabulary" percentage={Math.min(100, 20 + (safeXp / 50))} color={colors.primary} />
+          <SkillBar title="Grammar" percentage={Math.min(100, 10 + (safeXp / 40))} color={colors.secondary} />
+          <SkillBar title="Speaking" percentage={Math.min(100, 5 + (safeXp / 80))} color={colors.accent} />
+          <SkillBar title="Listening" percentage={Math.min(100, 15 + (safeXp / 60))} color={colors.success} />
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -155,12 +168,5 @@ const styles = StyleSheet.create({
   },
   skillsCard: {
     borderWidth: 1,
-  },
-  preferencesCard: {
-    borderWidth: 1,
-  },
-  horizontalDivider: {
-    height: 1,
-    width: '100%',
   },
 });

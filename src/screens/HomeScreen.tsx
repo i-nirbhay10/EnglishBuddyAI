@@ -5,29 +5,31 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import { QuestCard } from '../components/QuestCard';
+import { getProgress, checkDailyLogin } from '../services/storageService';
+import { calculateLevel, calculateLevelProgress, getLevelTitle } from '../utils/levelUtils';
 import { useFocusEffect } from '@react-navigation/native';
-import { getProgress } from '../services/storageService';
 
 export const HomeScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
-  
   const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useFocusEffect(
     React.useCallback(() => {
       const loadProgress = async () => {
+        await checkDailyLogin();
         const progress = await getProgress();
-        setXp(progress.xp);
+        setXp(progress?.xp || 0);
+        setStreak(progress?.streak || 0);
       };
       loadProgress();
     }, [])
   );
 
-  const xpPerLevel = 500;
-  const currentLevel = Math.floor(xp / xpPerLevel) + 1;
-  const currentLevelXp = xp % xpPerLevel;
-  const progressPercent = (currentLevelXp / xpPerLevel) * 100;
+  const safeXp = xp || 0;
+  const currentLevel = calculateLevel(safeXp);
+  const { currentLevelXp, progressPercent, xpRequired } = calculateLevelProgress(safeXp);
 
   return (
     <ScrollView 
@@ -44,13 +46,13 @@ export const HomeScreen = ({ navigation }: any) => {
       {/* Header Profile Section */}
       <View style={[styles.header, { marginBottom: spacing.xl }]}>
         <View>
-          <Text style={[styles.greeting, { color: colors.primaryNeon }]}>Level {currentLevel} Scholar</Text>
+          <Text style={[styles.greeting, { color: colors.primaryNeon }]}>Level {currentLevel} {getLevelTitle(currentLevel).split(' ')[1]}</Text>
           <Text style={[styles.username, { color: colors.text }]}>Explorer_99</Text>
         </View>
         <View style={[styles.statsContainer, { gap: spacing.sm }]}>
           <View style={[styles.statBadge, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.round }]}>
             <View style={{ marginRight: 4 }}><Icon name="flame" size={16} color={colors.warning} /></View>
-            <Text style={[styles.statText, { color: colors.text }]}>7</Text>
+            <Text style={[styles.statText, { color: colors.text }]}>{streak}</Text>
           </View>
           <View style={[styles.statBadge, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.round }]}>
             <View style={{ marginRight: 4 }}><Icon name="star" family="FontAwesome5" size={16} color={colors.accent} /></View>
@@ -61,7 +63,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
       {/* Progress Bar */}
       <View style={[styles.progressCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg, marginBottom: spacing.xl, padding: spacing.lg }]}>
-        <Text style={[styles.progressTitle, { color: colors.text, marginBottom: spacing.md }]}>Next Level: {currentLevelXp} / {xpPerLevel} XP</Text>
+        <Text style={[styles.progressTitle, { color: colors.text, marginBottom: spacing.md }]}>Next Level: {currentLevelXp} / {xpRequired} XP</Text>
         <View style={[styles.progressBarBg, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}>
           <LinearGradient
             colors={[colors.secondary, colors.primaryNeon]}
