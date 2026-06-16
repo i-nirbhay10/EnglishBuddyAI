@@ -12,7 +12,7 @@ export const OnboardingScreen = ({ navigation }: any) => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={{ marginBottom: spacing.xl }}>
-          <Icon name="khanda" family="FontAwesome5" size={80} color={colors.primaryNeon} />
+          <Icon name="graduation-cap" family="FontAwesome5" size={80} color={colors.primaryNeon} />
         </View>
         <Text style={[styles.title, { color: colors.text, marginBottom: spacing.md }]}>Your Quest Begins</Text>
         <Text style={[styles.description, { color: colors.textMuted, paddingHorizontal: spacing.md }]}>

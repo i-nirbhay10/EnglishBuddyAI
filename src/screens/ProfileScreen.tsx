@@ -11,11 +11,12 @@ import { getProgress } from '../services/storageService';
 import { calculateLevel, getLevelTitle } from '../utils/levelUtils';
 
 export const ProfileScreen = ({ navigation }: any) => {
-  const { colors, spacing, borderRadius, isDark, toggleTheme } = useTheme();
+  const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
   
   const [xp, setXp] = useState(0);
   const [completedNodes, setCompletedNodes] = useState(0);
+  const [weaknesses, setWeaknesses] = useState<string[]>([]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -23,6 +24,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         const progress = await getProgress();
         setXp(progress?.xp || 0);
         setCompletedNodes(progress?.completedNodes || 0);
+        setWeaknesses(progress?.weaknesses || []);
       };
       loadProgress();
     }, [])
@@ -93,6 +95,39 @@ export const ProfileScreen = ({ navigation }: any) => {
           <SkillBar title="Grammar" percentage={Math.min(100, 10 + (safeXp / 40))} color={colors.secondary} />
           <SkillBar title="Speaking" percentage={Math.min(100, 5 + (safeXp / 80))} color={colors.accent} />
           <SkillBar title="Listening" percentage={Math.min(100, 15 + (safeXp / 60))} color={colors.success} />
+        </View>
+      )}
+
+      <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: spacing.md }]}>Focus Areas</Text>
+      {weaknesses.length === 0 ? (
+        <View style={[styles.emptyStateCard, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.lg, padding: spacing.xl, marginBottom: spacing.xl, alignItems: 'center' }]}>
+          <Icon name="check-circle" family="FontAwesome5" size={40} color={colors.success} />
+          <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold', marginTop: spacing.md, textAlign: 'center' }}>No Weak Areas Detected!</Text>
+          <Text style={{ color: colors.textMuted, textAlign: 'center', marginTop: 4 }}>You're doing great. Keep practicing to maintain your streak.</Text>
+        </View>
+      ) : (
+        <View style={[styles.skillsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl }]}>
+          <Text style={{ color: colors.textMuted, marginBottom: spacing.md, fontSize: 14 }}>
+            The AI tutor is prioritizing these areas in your personalized sessions:
+          </Text>
+          <View style={styles.weaknessTagsContainer}>
+            {weaknesses.map((topic, index) => (
+              <View 
+                key={index} 
+                style={[
+                  styles.weaknessTag, 
+                  { 
+                    backgroundColor: colors.error + '15', 
+                    borderColor: colors.error + '30',
+                    borderRadius: borderRadius.md 
+                  }
+                ]}
+              >
+                <Icon name="exclamation-triangle" family="FontAwesome5" size={12} color={colors.error} />
+                <Text style={[styles.weaknessText, { color: colors.error, marginLeft: spacing.xs }]}>{topic}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
     </ScrollView>
@@ -168,5 +203,22 @@ const styles = StyleSheet.create({
   },
   skillsCard: {
     borderWidth: 1,
+  },
+  weaknessTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  weaknessTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  weaknessText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

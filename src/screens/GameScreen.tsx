@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming } from 'react-native-reanimated';
@@ -8,10 +8,19 @@ import { ProgressBar } from '../components/ProgressBar';
 import { OptionButton } from '../components/OptionButton';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { generateQuestions, Question } from '../services/aiService';
+import { completeNode } from '../services/storageService';
 
 export const GameScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  };
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +68,7 @@ export const GameScreen = ({ navigation }: any) => {
     return (
       <View style={[styles.container, styles.centerAll, { backgroundColor: colors.background }]}>
         <Text style={{ color: colors.error }}>Failed to load questions.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: spacing.md, padding: spacing.md, backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.md }}>
+        <TouchableOpacity onPress={handleGoBack} style={{ marginTop: spacing.md, padding: spacing.md, backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.md }}>
           <Text style={{ color: colors.text }}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -67,6 +76,7 @@ export const GameScreen = ({ navigation }: any) => {
   }
 
   const question = questions[currentQuestionIndex];
+  const promptText = question.type === 'spelling' ? 'Select the correct spelling' : question.type === 'vocabulary' ? 'Select the correct word' : 'Fill in the blank';
 
   const handleSelectOption = async (option: string) => {
     if (selectedAnswer !== null) return;
@@ -105,11 +115,7 @@ export const GameScreen = ({ navigation }: any) => {
     if (currentQuestionIndex < questions.length - 1) {
       if (lives <= 0 && !isCorrect) {
         // Game over state
-        if (navigation.canGoBack()) {
-          navigation.goBack();
-        } else {
-          navigation.navigate('MainTabs');
-        }
+        handleGoBack();
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
@@ -119,30 +125,19 @@ export const GameScreen = ({ navigation }: any) => {
       if (lives > 0 || isCorrect) {
         // Finished all questions successfully
         try {
-          const { completeNode } = await import('../services/storageService');
           await completeNode();
         } catch (e) {
           console.error("Failed to save progress", e);
         }
       }
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.navigate('MainTabs');
-      }
+      handleGoBack();
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={[styles.header, { padding: spacing.md }]}>
-        <TouchableOpacity onPress={() => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          } else {
-            navigation.navigate('MainTabs');
-          }
-        }} style={{ padding: 8 }}>
+        <TouchableOpacity onPress={handleGoBack} style={{ padding: 8 }}>
           <Icon name="times" family="FontAwesome5" size={24} color={colors.textMuted} />
         </TouchableOpacity>
         
@@ -161,7 +156,7 @@ export const GameScreen = ({ navigation }: any) => {
         contentContainerStyle={[styles.content, { padding: spacing.lg }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.prompt, { color: colors.textMuted }]}>Fill in the blank</Text>
+        <Text style={[styles.prompt, { color: colors.textMuted }]}>{promptText}</Text>
         
         <Animated.View style={[styles.sentenceContainer, animatedStyle, { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 5, borderRadius: borderRadius.xl }]}>
           <Text style={[styles.sentenceText, { color: colors.text }]}>

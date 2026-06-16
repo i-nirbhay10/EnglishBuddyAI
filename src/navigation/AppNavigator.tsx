@@ -12,19 +12,16 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { AIChatScreen } from '../screens/AIChatScreen';
 import { GameScreen } from '../screens/GameScreen';
-import { View, Text } from 'react-native';
+import { ScrambleScreen } from '../screens/ScrambleScreen';
+import { MatchScreen } from '../screens/MatchScreen';
+import { GuessScreen } from '../screens/GuessScreen';
+import { ConnectScreen } from '../screens/ConnectScreen';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const PlaceholderScreen = ({ name }: { name: string }) => {
-  const { colors } = useTheme();
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-      <Text style={{ color: colors.text, fontSize: 24, fontWeight: 'bold' }}>{name} Tab</Text>
-    </View>
-  );
-};
+
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -81,7 +78,7 @@ const MainTabs = () => {
 import { SettingsScreen } from '../screens/SettingsScreen';
 
 export const AppNavigator = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const navigationTheme = {
     ...DefaultTheme,
@@ -104,6 +101,10 @@ export const AppNavigator = () => {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="GameScreen" component={GameScreen} />
+        <Stack.Screen name="ScrambleScreen" component={ScrambleScreen} />
+        <Stack.Screen name="MatchScreen" component={MatchScreen} />
+        <Stack.Screen name="GuessScreen" component={GuessScreen} />
+        <Stack.Screen name="ConnectScreen" component={ConnectScreen} />
         <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -14,7 +14,14 @@ export const getProgress = async (): Promise<UserProgress> => {
   try {
     const data = await AsyncStorage.getItem(PROGRESS_KEY);
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return {
+        completedNodes: typeof parsed.completedNodes === 'number' ? parsed.completedNodes : 0,
+        xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+        streak: typeof parsed.streak === 'number' ? parsed.streak : 0,
+        weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
+        lastLoginDate: parsed.lastLoginDate,
+      };
     }
   } catch (e) {
     console.error('Failed to fetch progress', e);
@@ -29,13 +36,17 @@ export const checkDailyLogin = async (): Promise<void> => {
   if (progress.lastLoginDate !== today) {
     if (progress.lastLoginDate) {
       const lastDate = new Date(progress.lastLoginDate);
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      if (lastDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0]) {
-        progress.streak = (progress.streak || 0) + 1;
+      if (!isNaN(lastDate.getTime())) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0]) {
+          progress.streak = (progress.streak || 0) + 1;
+        } else {
+          progress.streak = 1; // reset streak
+        }
       } else {
-        progress.streak = 1; // reset streak
+        progress.streak = 1;
       }
     } else {
       progress.streak = 1;
@@ -65,8 +76,8 @@ export const saveProgress = async (progress: UserProgress): Promise<void> => {
 
 export const completeNode = async (): Promise<void> => {
   const progress = await getProgress();
-  progress.completedNodes += 1;
-  progress.xp += 50;
+  progress.completedNodes = (progress.completedNodes || 0) + 1;
+  progress.xp = (progress.xp || 0) + 50;
   await saveProgress(progress);
 };
 

@@ -26,8 +26,8 @@ export const MapScreen = ({ navigation }: any) => {
     React.useCallback(() => {
       const loadProgress = async () => {
         const progress = await getProgress();
-        setCompletedNodes(progress.completedNodes);
-        setXp(progress.xp);
+        setCompletedNodes(progress?.completedNodes || 0);
+        setXp(progress?.xp || 0);
       };
       loadProgress();
     }, [])

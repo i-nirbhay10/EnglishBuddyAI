@@ -15,6 +15,7 @@ export const AIChatScreen = () => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [showScenarios, setShowScenarios] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   React.useEffect(() => {
@@ -56,14 +57,12 @@ export const AIChatScreen = () => {
     const prompt = `Let's do a roleplay scenario: ${scenario}. You start the conversation.`;
     const userMessage: Message = { id: Date.now().toString(), text: prompt, isUser: true };
     
-    setMessages(prev => {
-      const newMessages = [...prev, userMessage];
-      saveChatHistory(newMessages);
-      return newMessages;
-    });
+    setMessages([userMessage]);
+    await saveChatHistory([userMessage]);
     setIsTyping(true);
+    setShowScenarios(false);
     
-    await sendMessageToAI(prompt, messages);
+    await sendMessageToAI(prompt, []);
   };
 
   const sendMessageToAI = async (text: string, currentMessages: Message[]) => {
@@ -115,12 +114,20 @@ export const AIChatScreen = () => {
           <Icon name="robot" family="FontAwesome5" size={24} color={colors.primaryNeon} />
           <Text style={[styles.headerTitle, { color: colors.text, marginLeft: spacing.sm }]}>AI Conversation</Text>
         </View>
-        <TouchableOpacity 
-          style={[styles.headerButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}
-          onPress={handleClearChat}
-        >
-          <Icon name="trash" family="FontAwesome5" size={16} color={colors.error} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <TouchableOpacity 
+            style={[styles.headerButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}
+            onPress={() => setShowScenarios(true)}
+          >
+            <Icon name="book-open" family="FontAwesome5" size={16} color={colors.primaryNeon} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.headerButton, { backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }]}
+            onPress={handleClearChat}
+          >
+            <Icon name="trash" family="FontAwesome5" size={16} color={colors.error} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -188,6 +195,47 @@ export const AIChatScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {showScenarios && (
+        <View style={styles.overlayBackdrop}>
+          <TouchableOpacity style={styles.backdropPressable} onPress={() => setShowScenarios(false)} />
+          <View style={[styles.sheetContainer, { backgroundColor: colors.surface, borderTopColor: colors.cardBorder, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={[styles.sheetTitle, { color: colors.text }]}>Choose a Roleplay Scenario</Text>
+              <TouchableOpacity onPress={() => setShowScenarios(false)} style={{ padding: 4 }}>
+                <Icon name="times" family="FontAwesome5" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={{ maxHeight: 350, paddingHorizontal: 16 }}>
+              <TouchableOpacity onPress={() => startRoleplay("I am at a coffee shop ordering a drink and a pastry")} style={[styles.scenarioBtn, { backgroundColor: colors.surfaceHighlight, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                <Icon name="coffee" family="FontAwesome5" size={16} color={colors.primary} />
+                <Text style={[styles.scenarioText, { color: colors.text }]}>Coffee Shop Order</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => startRoleplay("I am at a job interview for a software developer position")} style={[styles.scenarioBtn, { backgroundColor: colors.surfaceHighlight, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                <Icon name="briefcase" family="FontAwesome5" size={16} color={colors.accent} />
+                <Text style={[styles.scenarioText, { color: colors.text }]}>Job Interview</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => startRoleplay("I am checking into a hotel but they can't find my reservation")} style={[styles.scenarioBtn, { backgroundColor: colors.surfaceHighlight, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                <Icon name="hotel" family="FontAwesome5" size={16} color={colors.warning} />
+                <Text style={[styles.scenarioText, { color: colors.text }]}>Hotel Reservation Issue</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => startRoleplay("I am at the airport customs control answering officer questions")} style={[styles.scenarioBtn, { backgroundColor: colors.surfaceHighlight, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                <Icon name="plane" family="FontAwesome5" size={16} color={colors.success} />
+                <Text style={[styles.scenarioText, { color: colors.text }]}>Airport Customs Control</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => startRoleplay("I am asking a local for walking directions to Times Square")} style={[styles.scenarioBtn, { backgroundColor: colors.surfaceHighlight, borderColor: colors.cardBorder, borderRadius: borderRadius.lg }]}>
+                <Icon name="map-marked-alt" family="FontAwesome5" size={16} color={colors.error} />
+                <Text style={[styles.scenarioText, { color: colors.text }]}>Asking for Directions</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -264,5 +312,30 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '600',
     fontSize: 15,
-  }
+  },
+  overlayBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+    zIndex: 999,
+  },
+  backdropPressable: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheetContainer: {
+    borderTopWidth: 1.5,
+    paddingTop: 16,
+    paddingBottom: 30,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

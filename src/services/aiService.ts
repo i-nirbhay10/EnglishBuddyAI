@@ -15,6 +15,7 @@ export interface Question {
   correctAnswer: string;
   explanation: string;
   topic: string;
+  type?: string;
 }
 
 export const generateQuestions = async (level: number, count: number = 5): Promise<Question[]> => {
