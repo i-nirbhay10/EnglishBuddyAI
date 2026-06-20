@@ -4,6 +4,7 @@ import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getProgress, saveProgress } from '../services/storageService';
+import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
 
 interface ConnectPuzzle {
   letters: string[];
@@ -31,6 +32,7 @@ export const ConnectScreen = ({ navigation }: any) => {
   const [feedbackType, setFeedbackType] = useState<'success' | 'error' | ''>('');
   const [totalXpEarned, setTotalXpEarned] = useState(0);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   // Initialize a puzzle
   const initPuzzle = useCallback((index: number) => {
@@ -42,6 +44,7 @@ export const ConnectScreen = ({ navigation }: any) => {
     setInputWord('');
     setFeedbackMsg('');
     setFeedbackType('');
+    setShowOverlay(false);
   }, []);
 
   useEffect(() => {
@@ -119,6 +122,7 @@ export const ConnectScreen = ({ navigation }: any) => {
       if (newFound.length === currentPuzzle.words.length) {
         setTotalXpEarned(prev => prev + 50); // bonus XP
         setFeedbackMsg('Puzzles Cleared! +50 XP Bonus!');
+        setShowOverlay(true);
       }
     } else {
       // Wrong Word
@@ -273,6 +277,17 @@ export const ConnectScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <AnimatedResultOverlay
+        visible={showOverlay}
+        type="win"
+        xpReward={50}
+        title="Puzzle Completed!"
+        subtitle="You found all target words! Outstanding vocabulary skill."
+        primaryBtnText="Next Puzzle"
+        onPrimaryPress={loadNextPuzzle}
+        onSecondaryPress={handleGoBack}
+      />
     </View>
   );
 };

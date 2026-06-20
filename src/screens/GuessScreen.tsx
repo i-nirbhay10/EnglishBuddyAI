@@ -4,6 +4,7 @@ import { useTheme } from '../theme/theme';
 import { Icon } from '../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getProgress, saveProgress } from '../services/storageService';
+import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
 
 interface GuessWord {
   word: string;
@@ -33,6 +34,7 @@ export const GuessScreen = ({ navigation }: any) => {
   const [lives, setLives] = useState(6);
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [showOverlay, setShowOverlay] = useState(false);
 
   // Load a random word
   const selectRandomWord = () => {
@@ -42,6 +44,7 @@ export const GuessScreen = ({ navigation }: any) => {
     setGuessedLetters([]);
     setLives(6);
     setGameState('playing');
+    setShowOverlay(false);
   };
 
   useEffect(() => {
@@ -78,6 +81,7 @@ export const GuessScreen = ({ navigation }: any) => {
       setLives(remainingLives);
       if (remainingLives <= 0) {
         setGameState('lost');
+        setShowOverlay(true);
       }
     } else {
       // Check if all letters guessed
@@ -86,6 +90,7 @@ export const GuessScreen = ({ navigation }: any) => {
       if (allGuessed) {
         setGameState('won');
         setScore(prev => prev + 1);
+        setShowOverlay(true);
       }
     }
   };
@@ -238,6 +243,17 @@ export const GuessScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <AnimatedResultOverlay
+        visible={showOverlay}
+        type={gameState === 'won' ? 'win' : 'lose'}
+        xpReward={30}
+        title={gameState === 'won' ? "Word Found!" : "Incorrect Word"}
+        subtitle={gameState === 'won' ? `Great job! You guessed "${currentWordObj.word}" correctly!` : `The word was "${currentWordObj.word}".`}
+        primaryBtnText="Next Word"
+        onPrimaryPress={selectRandomWord}
+        onSecondaryPress={handleGoBack}
+      />
     </View>
   );
 };

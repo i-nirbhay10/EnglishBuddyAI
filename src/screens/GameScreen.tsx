@@ -9,6 +9,7 @@ import { OptionButton } from '../components/OptionButton';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { generateQuestions, Question } from '../services/aiService';
 import { completeNode } from '../services/storageService';
+import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
 
 export const GameScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
@@ -28,18 +29,31 @@ export const GameScreen = ({ navigation }: any) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [lives, setLives] = useState(3);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayType, setOverlayType] = useState<'win' | 'lose'>('win');
+
+  const fetchQuestions = async () => {
+    try {
+      setIsLoading(true);
+      const data = await generateQuestions(5, 5); // Level 5, 5 questions
+      setQuestions(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetGame = () => {
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    setLives(3);
+    setShowOverlay(false);
+    fetchQuestions();
+  };
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const data = await generateQuestions(5, 5); // Level 5, 5 questions
-        setQuestions(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchQuestions();
   }, []);
 
@@ -114,8 +128,8 @@ export const GameScreen = ({ navigation }: any) => {
   const handleNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       if (lives <= 0 && !isCorrect) {
-        // Game over state
-        handleGoBack();
+        setOverlayType('lose');
+        setShowOverlay(true);
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
@@ -129,8 +143,12 @@ export const GameScreen = ({ navigation }: any) => {
         } catch (e) {
           console.error("Failed to save progress", e);
         }
+        setOverlayType('win');
+        setShowOverlay(true);
+      } else {
+        setOverlayType('lose');
+        setShowOverlay(true);
       }
-      handleGoBack();
     }
   };
 
@@ -204,6 +222,20 @@ export const GameScreen = ({ navigation }: any) => {
         explanation={question.explanation}
         lives={lives}
         onContinue={handleNextQuestion}
+      />
+
+      <AnimatedResultOverlay
+        visible={showOverlay}
+        type={overlayType}
+        xpReward={50}
+        onPrimaryPress={() => {
+          if (overlayType === 'win') {
+            handleGoBack();
+          } else {
+            resetGame();
+          }
+        }}
+        onSecondaryPress={handleGoBack}
       />
     </View>
   );

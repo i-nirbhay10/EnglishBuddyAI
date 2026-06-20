@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProgressBar } from '../components/ProgressBar';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { getProgress, saveProgress } from '../services/storageService';
+import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
 
 interface MatchItem {
   id: string;
@@ -43,23 +44,32 @@ export const MatchScreen = ({ navigation }: any) => {
   const [currentPair, setCurrentPair] = useState<MatchPair | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lives, setLives] = useState(3);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayType, setOverlayType] = useState<'win' | 'lose'>('win');
 
   useEffect(() => {
-    // Select 4 random pairs from fallbackMatchPairs
+    resetGame();
+  }, []);
+
+  const resetGame = () => {
+    setIsLoading(true);
     const shuffledPairs = [...fallbackMatchPairs].sort(() => 0.5 - Math.random()).slice(0, 4);
-    
-    // Create cards for words and definitions
     const cards: MatchItem[] = [];
     shuffledPairs.forEach((pair, idx) => {
       const pairId = idx.toString();
       cards.push({ id: `word-${pairId}`, text: pair.word, type: 'word', pairId });
       cards.push({ id: `meaning-${pairId}`, text: pair.meaning, type: 'meaning', pairId });
     });
-
-    // Shuffle cards
     setItems(cards.sort(() => 0.5 - Math.random()));
+    setSelectedId(null);
+    setMatchedIds([]);
+    setFailedIds([]);
+    setIsCorrect(null);
+    setCurrentPair(null);
+    setLives(3);
+    setShowOverlay(false);
     setIsLoading(false);
-  }, []);
+  };
 
   const handleGoBack = () => {
     if (navigation.canGoBack && navigation.canGoBack()) {
@@ -129,7 +139,8 @@ export const MatchScreen = ({ navigation }: any) => {
     setFailedIds([]);
 
     if (lives <= 0) {
-      handleGoBack();
+      setOverlayType('lose');
+      setShowOverlay(true);
       return;
     }
 
@@ -142,7 +153,8 @@ export const MatchScreen = ({ navigation }: any) => {
       } catch (e) {
         console.error(e);
       }
-      handleGoBack();
+      setOverlayType('win');
+      setShowOverlay(true);
     }
   };
 
@@ -241,6 +253,20 @@ export const MatchScreen = ({ navigation }: any) => {
         explanation={currentPair ? currentPair.explanation : ''}
         lives={lives}
         onContinue={handleContinue}
+      />
+
+      <AnimatedResultOverlay
+        visible={showOverlay}
+        type={overlayType}
+        xpReward={120}
+        onPrimaryPress={() => {
+          if (overlayType === 'win') {
+            handleGoBack();
+          } else {
+            resetGame();
+          }
+        }}
+        onSecondaryPress={handleGoBack}
       />
     </View>
   );

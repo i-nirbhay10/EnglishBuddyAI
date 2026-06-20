@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProgressBar } from '../components/ProgressBar';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { getProgress, saveProgress } from '../services/storageService';
+import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
 
 interface ScrambleQuestion {
   sentence: string;
@@ -40,14 +41,25 @@ export const ScrambleScreen = ({ navigation }: any) => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lives, setLives] = useState(3);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayType, setOverlayType] = useState<'win' | 'lose'>('win');
 
   useEffect(() => {
-    // Generate questions (could use AI later, currently use fallbacks to keep it offline-friendly and instant)
+    resetGame();
+  }, []);
+
+  const resetGame = () => {
+    setIsLoading(true);
     const shuffled = fallbackScrambleQuestions.sort(() => 0.5 - Math.random());
     setQuestions(shuffled);
+    setCurrentIdx(0);
+    setSelectedWords([]);
     setAvailableWords([...shuffled[0].scrambled].sort(() => 0.5 - Math.random()));
+    setIsCorrect(null);
+    setLives(3);
+    setShowOverlay(false);
     setIsLoading(false);
-  }, []);
+  };
 
   if (isLoading || questions.length === 0) {
     return (
@@ -95,7 +107,8 @@ export const ScrambleScreen = ({ navigation }: any) => {
   const handleContinue = async () => {
     if (currentIdx < questions.length - 1) {
       if (lives <= 0 && !isCorrect) {
-        handleGoBack();
+        setOverlayType('lose');
+        setShowOverlay(true);
       } else {
         const nextIdx = currentIdx + 1;
         setCurrentIdx(nextIdx);
@@ -112,8 +125,12 @@ export const ScrambleScreen = ({ navigation }: any) => {
         } catch (e) {
           console.error(e);
         }
+        setOverlayType('win');
+        setShowOverlay(true);
+      } else {
+        setOverlayType('lose');
+        setShowOverlay(true);
       }
-      handleGoBack();
     }
   };
 
@@ -202,6 +219,20 @@ export const ScrambleScreen = ({ navigation }: any) => {
         explanation={question.explanation}
         lives={lives}
         onContinue={handleContinue}
+      />
+
+      <AnimatedResultOverlay
+        visible={showOverlay}
+        type={overlayType}
+        xpReward={100}
+        onPrimaryPress={() => {
+          if (overlayType === 'win') {
+            handleGoBack();
+          } else {
+            resetGame();
+          }
+        }}
+        onSecondaryPress={handleGoBack}
       />
     </View>
   );
