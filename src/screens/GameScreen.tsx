@@ -8,8 +8,9 @@ import { ProgressBar } from '../components/ProgressBar';
 import { OptionButton } from '../components/OptionButton';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { generateQuestions, Question } from '../services/aiService';
-import { completeNode } from '../services/storageService';
+import { getProgress, saveProgress, completeNode } from '../services/storageService';
 import { AnimatedResultOverlay } from '../components/AnimatedResultOverlay';
+import { playSpeech } from '../utils/audioUtils';
 
 export const GameScreen = ({ navigation }: any) => {
   const { colors, spacing, borderRadius } = useTheme();
@@ -109,6 +110,13 @@ export const GameScreen = ({ navigation }: any) => {
     }
     
     if (correct) {
+      // Incremental XP Save
+      try {
+        const progress = await getProgress();
+        progress.xp = (progress.xp || 0) + 10; // 10 XP per question
+        await saveProgress(progress);
+      } catch (e) {}
+
       scaleAnimation.value = withSequence(
         withSpring(1.1),
         withSpring(1)
@@ -174,7 +182,12 @@ export const GameScreen = ({ navigation }: any) => {
         contentContainerStyle={[styles.content, { padding: spacing.lg }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.prompt, { color: colors.textMuted }]}>{promptText}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <Text style={[styles.prompt, { color: colors.textMuted, marginBottom: 0 }]}>{promptText}</Text>
+          <TouchableOpacity onPress={() => playSpeech(question.sentence.replace('___', 'blank'))} style={{ padding: 8, backgroundColor: colors.surfaceHighlight, borderRadius: borderRadius.round }}>
+            <Icon name="volume-up" family="FontAwesome5" size={16} color={colors.primaryNeon} />
+          </TouchableOpacity>
+        </View>
         
         <Animated.View style={[styles.sentenceContainer, animatedStyle, { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 5, borderRadius: borderRadius.xl }]}>
           <Text style={[styles.sentenceText, { color: colors.text }]}>

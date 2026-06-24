@@ -160,7 +160,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
       {/* Mind Soothing Section */}
       <Text style={[styles.sectionTitle, { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.md }]}>
-        Time Pass & Relax
+        Casual Word Games
       </Text>
 
       <TouchableOpacity

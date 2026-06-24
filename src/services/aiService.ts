@@ -18,6 +18,14 @@ export interface Question {
   type?: string;
 }
 
+const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 8000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  const response = await fetch(url, { ...options, signal: controller.signal as any });
+  clearTimeout(id);
+  return response;
+};
+
 export const generateQuestions = async (level: number, count: number = 5): Promise<Question[]> => {
   const { getProgress } = await import('./storageService');
   const progress = await getProgress();
@@ -25,7 +33,7 @@ export const generateQuestions = async (level: number, count: number = 5): Promi
 
   if (USE_REAL_AI && API_KEY) {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
+      const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,7 +61,7 @@ export const getChatResponse = async (userMessage: string, history: { role: stri
     try {
       const prompt = buildChatPrompt(userMessage, history);
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
+      const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

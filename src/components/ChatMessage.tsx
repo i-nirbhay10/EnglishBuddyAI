@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { Icon } from './Icon';
+import { playSpeech } from '../utils/audioUtils';
 
 export interface Message {
   id: string;
@@ -36,6 +37,12 @@ export const ChatMessage = ({ msg }: ChatMessageProps) => {
         >
           <Text style={[styles.messageText, { color: msg.isUser ? '#FFF' : colors.text }]}>{msg.text}</Text>
         </View>
+
+        {!msg.isUser && (
+          <TouchableOpacity onPress={() => playSpeech(msg.text)} style={{ alignSelf: 'flex-start', marginLeft: 8, marginTop: 4 }}>
+            <Icon name="volume-up" family="FontAwesome5" size={14} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
         
         {msg.correction && (
           <View style={[styles.correctionBubble, { backgroundColor: colors.warning + '20', borderColor: colors.warning, borderRadius: borderRadius.md, marginTop: spacing.xs }]}>
